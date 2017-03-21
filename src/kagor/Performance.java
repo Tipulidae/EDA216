@@ -1,4 +1,4 @@
-package dbtLab3;
+package kagor;
 
 public class Performance {
 	public String movie;

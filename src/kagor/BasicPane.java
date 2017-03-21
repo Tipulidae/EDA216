@@ -1,7 +1,9 @@
-package dbtLab3;
+package kagor;
 
 import javax.swing.*;
 import javax.swing.border.*;
+
+import kagor.UserLoginPane.ActionHandler;
 
 import java.awt.*;
 
@@ -89,8 +91,11 @@ public class BasicPane extends JPanel {
      *
      * @return An empty panel.
      */
-    public JComponent createBottomPanel() { 
-        return new JPanel();
+    public JComponent createBottomPanel() {
+    	JPanel panel = new JPanel();
+    	panel.add(messageLabel);
+    	return panel;
+        //return new JPanel();
     }
         
     /**

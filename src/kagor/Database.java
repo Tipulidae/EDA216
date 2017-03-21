@@ -1,4 +1,4 @@
-package dbtLab3;
+package kagor;
 
 import java.sql.*;
 import java.util.*;

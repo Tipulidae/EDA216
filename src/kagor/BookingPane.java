@@ -1,4 +1,4 @@
-package dbtLab3;
+package kagor;
 
 import javax.swing.*;
 import javax.swing.event.*;

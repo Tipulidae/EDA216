@@ -1,4 +1,4 @@
-package dbtLab3;
+package kagor;
 
 import javax.swing.*;
 import java.awt.event.*;
@@ -55,6 +55,7 @@ public class UserLoginPane extends BasicPane {
      * 
      * @return The bottom panel.
      */
+    @Override
     public JComponent createBottomPanel() {
         JButton[] buttons = new JButton[1];
         buttons[0] = new JButton("Login");
