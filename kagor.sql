@@ -32,7 +32,7 @@ CREATE TABLE Pallets (
 	cookieName		varchar(32) not null,
 	location			varchar(32)	not null,
 	timestamp		datetime not null,
-	blocked			boolean,
+	blocked			boolean default false,
 	primary key (palletId),
 	foreign key (cookieName) references Cookies(cookieName),
 	foreign key (orderId) references Orders(orderId)

@@ -1,7 +1,12 @@
 package kagor;
 
 import java.sql.*;
+import java.sql.Date;
 import java.util.*;
+
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 /**
  * Database is a class that specifies the interface to the movie
@@ -81,42 +86,82 @@ public class Database {
         return conn != null;
     }
 
-    
-    public boolean userExists(String userID) {
-    	boolean found = false;
-    	try {
-    		String sql = 
-    				"SELECT username FROM User WHERE username = '"+userID+"'";
-    		Statement s = conn.createStatement();
-    		ResultSet rs = s.executeQuery(sql);
-    		found = rs.next();
+    public boolean addPallet(String product, Timestamp time){
+    	try{
+    		String insertString = "INSERT INTO Pallets (cookieName, location, timestamp) VALUES (?,?,?)";
+    		PreparedStatement insertStatement = conn.prepareStatement(insertString);
+    		insertStatement.setString(1, product);
+    		insertStatement.setString(2, "FREEZER");
+    		insertStatement.setTimestamp(3, time);
+    		insertStatement.executeUpdate();
     	} catch (SQLException e) {
-    		found = false;
-    		//e.printStackTrace();
-    	} finally {
-    		
+    		System.err.println(e);
     	}
-    	return found;
+    	
+    	
+    	return false;
     }
+
+	public List<String> searchPallet(String id2, Timestamp startTime, Timestamp endTime, String product, String blocked) {
+		List<String> pallets = new LinkedList<String>();
+		try {
+			String sql = "SELECT * FROM Pallets";
+			Statement s = conn.createStatement();
+			ResultSet rs = s.executeQuery(sql);
+			
+			while (rs.next())
+				pallets.add(rs.getString(1)+", "+rs.getString(2)+", "+rs.getString(3)+", "+rs.getString(4)+", "+rs.getString(5)+", "+rs.getString(6));
+				
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return pallets;
+	}
+
+	public void deliverPallet(String palletId, String orderId) {
+		try {
+			if(orderId == null || orderId.isEmpty()){
+				String deleteString = "DELETE FROM Pallets WHERE palletId = ?";
+				PreparedStatement deleteStatement = conn.prepareStatement(deleteString);
+				deleteStatement.setString(1, palletId);
+				deleteStatement.executeUpdate();
+			} else {
+				String updateString = "UPDATE Pallets SET location = ?, orderId = ? "
+						+ "WHERE palletId = ?";
+	    		PreparedStatement updateStatement = conn.prepareStatement(updateString);
+	    		updateStatement.setString(1, "DELIVERED");
+	    		updateStatement.setString(2, orderId);
+	    		updateStatement.setString(3, palletId);
+	    		updateStatement.executeUpdate();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public int blockPallet(String product, Timestamp startTime, Timestamp endTime){
+		int blocked = 0;
+		try{
+			String blockString = "UPDATE Pallets SET blocked = ? WHERE cookieName = ? AND"
+					+ " timestamp >= ? AND timestamp <= ?";
+			PreparedStatement blockStatement = conn.prepareStatement(blockString);
+			blockStatement.setBoolean(1, true);
+			blockStatement.setString(2, product);
+			blockStatement.setTimestamp(3, startTime);
+			blockStatement.setTimestamp(4, endTime);
+			//blockStatement.setDate(4, new Date(System.currentTimeMillis() - 1000000000));
+			//blockStatement.setDate(3, new Date(System.currentTimeMillis() - 1000000000));
+			//blockStatement.setDate(4, new Date(System.currentTimeMillis()));
+			blocked = blockStatement.executeUpdate();
+			//Date.
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+		return blocked;
+	}
     
-    public List<String> getMovieNames() {
-    	List<String> movies = new LinkedList<String>();
-    	try {
-    		String sql = 
-    				"SELECT DISTINCT movie FROM Performance ";
-    		Statement s = conn.createStatement();
-    		ResultSet rs = s.executeQuery(sql);
-    		while (rs.next()) {
-    			movies.add(rs.getString(1));
-    		}
-    	} catch (SQLException e) {
-    		
-    	} finally {
-    		
-    	}
-    	return movies;
-    }
-    
+    /*
     public List<String> getDates(String movie) {
     	List<String> dates = new LinkedList<String>();
     	try {
@@ -157,86 +202,13 @@ public class Database {
     		
     	}
     	return p;
-    }
-    
-    private int getFreeSeats(String movie, String date) {
-    	return getMaxSeats(movie,date) - getBookedSeats(movie,date);
-    }
-    
-    private int getBookedSeats(String movie, String date) {
-    	int bookedSeats = -1;
-    	try {
-    		String sql = "SELECT count(*) FROM Ticket "
-    				+ "WHERE movie = '"+ movie + "' and pdate = '"+date+"'"; 
-    		
-    		Statement s = conn.createStatement();
-    		ResultSet rs = s.executeQuery(sql);
-    		while (rs.next()) {
-    			bookedSeats = rs.getInt(1);
-      		}
-    	} catch (SQLException e) {
-    		e.printStackTrace();
-    	} finally {
-    		
-    	}
-    	System.out.println("bookedSeats="+bookedSeats);
-    	return bookedSeats;
-    }
-    
-    
-    private int getMaxSeats(String movie, String date) {
-    	int maxSeats = -1;
-    	try {
-    		String sql = 	"SELECT seats FROM Theater t, Performance p "
-    				+ "WHERE t.name = p.theater and p.movie = '"+ movie + "' and p.pdate = '"+date+"'"; 
-    		
-    		Statement s = conn.createStatement();
-    		ResultSet rs = s.executeQuery(sql);
-    		while (rs.next()) {
-    			maxSeats = rs.getInt(1);
-      		}
-    	} catch (SQLException e) {
-    		e.printStackTrace();
-    	} finally {
-    		
-    	}
-    	System.out.println("maxSeats="+maxSeats);
-    	return maxSeats;
-        
-    }
-    
-    public boolean bookTicket(String movie, String date) {
-    	boolean success = false;
-    	
-    	try {
-    		conn.setAutoCommit(false);
-    		
-    		if (getFreeSeats(movie, date) > 0) {
-	    	
-	    		String sql = 
-	    				"INSERT INTO Ticket VALUES('"+(++id)+
-	    				"','"+CurrentUser.instance().getCurrentUserId()+"','"+
-	    				movie+"','"+date+"');";
-	    		// Statement s = conn.createStatement();
-	    		//PreparedStatement p = conn.prepareStatement(sql);
-	    		//p.executeQuery();
-	    		Statement s = conn.createStatement();
-	    		conn.commit();
-	    		if(s.executeUpdate(sql) > 0) {
-	    			success = true;
-	    		}
-    		}
-
-    	} catch (SQLException e) {
-    		e.printStackTrace();
-    	} finally {
-    		try {
-    			conn.setAutoCommit(true);
-    		} catch (SQLException e) {
-				System.err.println("Uh oh...");
-			}
-    	}
+    } */
  
-    	return success;
-    }
+	/*
+	Date strToDate(String dateStr) {
+		String[] ts = dateStr.split(" ");
+		
+	}*/
+	
+	
 }

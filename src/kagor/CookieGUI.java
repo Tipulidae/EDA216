@@ -35,7 +35,7 @@ public class CookieGUI {
         frame.setVisible(true);
 
         sp.displayMessage("Connecting to database ...");
-                
+        
 
         if (db.openConnection("kagor.db")) {
             sp.displayMessage("Connected to database");

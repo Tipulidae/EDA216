@@ -3,9 +3,9 @@ package kagor;
 import javax.swing.*;
 import javax.swing.border.*;
 
-import kagor.UserLoginPane.ActionHandler;
 
 import java.awt.*;
+import java.sql.Timestamp;
 
 /**
  * BasicPane is a pane in the user interface. It consists of two subpanels:
@@ -118,5 +118,19 @@ public class BasicPane extends JPanel {
      */
     public void clearMessage() {
         messageLabel.setText(" ");
+    }
+    
+    protected Timestamp stringToTimestamp(String time) {
+    	Timestamp now = new Timestamp(System.currentTimeMillis());
+    	if (time == null || time.isEmpty()) {
+    		return now;
+    	}
+    	try {
+    		return Timestamp.valueOf(time);
+    	} catch (IllegalArgumentException e) {
+    		JOptionPane.showMessageDialog((JFrame) SwingUtilities.getRoot(this),
+    		    "Illegal Time Format for: " + time, "You Done Fucked up:" , JOptionPane.ERROR_MESSAGE);
+    	}
+    	return now;
     }
 }
