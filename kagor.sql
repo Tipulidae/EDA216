@@ -32,7 +32,7 @@ CREATE TABLE Pallets (
 	cookieName		varchar(32) not null,
 	location			varchar(32)	not null,
 	timestamp		datetime not null,
-	blocked			boolean default false,
+	blocked			boolean default 0,
 	primary key (palletId),
 	foreign key (cookieName) references Cookies(cookieName),
 	foreign key (orderId) references Orders(orderId)
@@ -110,6 +110,36 @@ INSERT INTO Recipes VALUES ('Nut ring','Icing sugar',0.19);
 INSERT INTO Recipes VALUES ('Nut ring','Roasted, chopped nuts',0.225);
 
 INSERT INTO Recipes VALUES ('Nut cookie','Fine-ground nuts',0.75);
+INSERT INTO Recipes VALUES ('Nut cookie','Ground, roasted nuts',0.625);
+INSERT INTO Recipes VALUES ('Nut cookie','Bread crumbs',0.125);
+INSERT INTO Recipes VALUES ('Nut cookie','Sugar',0.375);
+INSERT INTO Recipes VALUES ('Nut cookie','Egg whites',0.35);
+INSERT INTO Recipes VALUES ('Nut cookie','Chocolate',0.05);
+
+INSERT INTO Recipes VALUES ('Amneris','Marzipan',0.75);
+INSERT INTO Recipes VALUES ('Amneris','Butter',0.25);
+INSERT INTO Recipes VALUES ('Amneris','Eggs',0.25);
+INSERT INTO Recipes VALUES ('Amneris','Potato starch',0.025);
+INSERT INTO Recipes VALUES ('Amneris','Wheat flour',0.025);
+
+INSERT INTO Recipes VALUES ('Tango','Butter',0.2);
+INSERT INTO Recipes VALUES ('Tango','Sugar',0.25);
+INSERT INTO Recipes VALUES ('Tango','Flour',0.3);
+INSERT INTO Recipes VALUES ('Tango','Sodium bicarbonate',0.004);
+INSERT INTO Recipes VALUES ('Tango','Vanilla',0.002);
+
+INSERT INTO Recipes VALUES ('Almond delight','Butter',0.4);
+INSERT INTO Recipes VALUES ('Almond delight','Sugar',0.27);
+INSERT INTO Recipes VALUES ('Almond delight','Chopped almonds',0.279);
+INSERT INTO Recipes VALUES ('Almond delight','Flour',0.4);
+INSERT INTO Recipes VALUES ('Almond delight','Cinnamon',0.01);
+
+INSERT INTO Recipes VALUES ('Berliner','Flour',0.35);
+INSERT INTO Recipes VALUES ('Berliner','Butter',0.25);
+INSERT INTO Recipes VALUES ('Berliner','Icing sugar',0.1);
+INSERT INTO Recipes VALUES ('Berliner','Eggs',0.05);
+INSERT INTO Recipes VALUES ('Berliner','Vanilla sugar',0.005);
+INSERT INTO Recipes VALUES ('Berliner','Chocolate',0.05);
 
 
 
@@ -127,16 +157,51 @@ INSERT INTO Customers VALUES ('Skånekagor AB', 'Perstorp');
 --INSERT INTO Orders VALUES ();
 --INSERT INTO OrderItems VALUES ();
 
+INSERT INTO Orders VALUES (1,'Köbekagor AB',1510198999124);
+INSERT INTO OrderItems VALUES (1,'Berliner',3);
+INSERT INTO OrderItems VALUES (1,'Almond delight',2);
+INSERT INTO OrderItems VALUES (1,'Amneris',10);
+
+INSERT INTO Orders VALUES (2,'Småbröd AB',1510198999124);
+INSERT INTO OrderItems VALUES (2,'Tango',3);
+INSERT INTO OrderItems VALUES (2,'Nut ring',1);
+INSERT INTO OrderItems VALUES (2,'Nut cookie',5);
+
+INSERT INTO Orders VALUES (3,'Köbekagor AB',1510198999124);
+INSERT INTO OrderItems VALUES (3,'Tango',1);
+
+INSERT INTO Orders VALUES (4,'Partykagor AB',1510198999124);
+INSERT INTO OrderItems VALUES (4,'Nut ring',1);
+INSERT INTO OrderItems VALUES (4,'Nut cookie',1);
+INSERT INTO OrderItems VALUES (4,'Amneris',1);
+INSERT INTO OrderItems VALUES (4,'Tango',1);
+INSERT INTO OrderItems VALUES (4,'Almond delight',1);
+INSERT INTO OrderItems VALUES (4,'Berliner',1);
 
 
+INSERT INTO Orders VALUES (5,'Köbekagor AB',1520198999124);
+INSERT INTO OrderItems VALUES (5,'Nut ring',100);
+INSERT INTO OrderItems VALUES (5,'Nut cookie',100);
+INSERT INTO OrderItems VALUES (5,'Amneris',100);
+INSERT INTO OrderItems VALUES (5,'Tango',100);
+INSERT INTO OrderItems VALUES (5,'Almond delight',100);
+INSERT INTO OrderItems VALUES (5,'Berliner',100);
 
+INSERT INTO Pallets VALUES (1,null,'Nut ring','FREEZER',1490198999124,0);
+INSERT INTO Pallets VALUES (2,null,'Nut ring','FREEZER',1450198999124,0);
+INSERT INTO Pallets VALUES (3,null,'Nut ring','FREEZER',1410198999124,0);
+INSERT INTO Pallets VALUES (4,null,'Nut ring','FREEZER',1370198999124,0);
+INSERT INTO Pallets VALUES (5,null,'Nut ring','FREEZER',1330198999124,0);
 
+INSERT INTO Pallets VALUES (6,5,'Nut cookie','DELIVERED',1490198999124,0);
+INSERT INTO Pallets VALUES (7,null,'Nut cookie','FREEZER',1490198999124,0);
+INSERT INTO Pallets VALUES (8,null,'Nut cookie','FREEZER',1490198999124,0);
+INSERT INTO Pallets VALUES (9,null,'Nut cookie','FREEZER',1490198999124,0);
+INSERT INTO Pallets VALUES (10,null,'Nut cookie','FREEZER',1490198999124,0);
 
+INSERT INTO Pallets VALUES (11,null,'Berliner','FREEZER',1490198999124,1);
 
-
-
-
-
+INSERT INTO Pallets VALUES (12,null,'Almond delight','FREEZER',-6000000000000,0);
 
 
 

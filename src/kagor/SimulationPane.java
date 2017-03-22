@@ -34,6 +34,7 @@ public class SimulationPane extends BasicPane {
 		addButton.addActionListener(new AddListener(addTypeField,addTimeField));
 		removeButton.addActionListener(new RemoveListener(removePalletIdField,removeOrderIdField));
 		
+		
 		panel.add(new JLabel(""));
 		panel.add(new JLabel("Type"));
 		panel.add(new JLabel("Time"));
@@ -69,14 +70,17 @@ public class SimulationPane extends BasicPane {
 		
         public void actionPerformed(ActionEvent e) {
         	String type = typeField.getText();
-        	Timestamp time = stringToTimestamp(timeField.getText());
+        	Timestamp time = stringToTimestampDefaultNow(timeField.getText());
         	System.out.println("Adding "+type+", "+time);
         	
+        	// Updates ingredients
+        	db.makeOnePalletOf(type);
         	
-        	db.addPallet(type, time);
-        	// Create pallet in db (this creates the "barcode", aka palletId)
-        	// Then add pallet to freezer (update pallet location)
-        	// db.addPalletToFreezer(type,time);
+        	// Adds pallet to db (this creates a palletId (barcode) and puts it in the freezer)
+        	int barcode = db.addPallet(type,time);
+        	
+        	// Print informative message to message bar!
+        	displayMessage("One pallet of "+type+" baked, packaged and placed in freezer! Barcode: "+barcode);
         }
     }
 	
@@ -91,14 +95,27 @@ public class SimulationPane extends BasicPane {
 		}
 		
         public void actionPerformed(ActionEvent e) {
-        	String palletId = palletIdField.getText();
-        	String orderId = orderIdField.getText();
+        	int palletId = -1;
+        	int orderId = -1;
+        	
+        	try {
+        		palletId = Integer.parseInt(palletIdField.getText());
+        		orderId = Integer.parseInt(orderIdField.getText());
+        	} catch (NumberFormatException ex) {
+        		errorMessage("Pallet Id and order Id must be integers!", "Fuck you!");
+        		return;
+        	}
+        	
         	System.out.println("Removing "+palletId+", "+orderId);
         	
         	
-        	db.deliverPallet(palletId,orderId);
-        	// Do stuff!
-        	// db.addPalletToFreezer(type,time);
+        	
+        	if (db.deliverPallet(palletId,orderId)) {
+        		displayMessage("Took pallet "+palletId+" from Freezer and delivered to order "+orderId);
+        	} else {
+        		displayMessage("Det gick ente!");
+        	}
+        	
         }
     }
 }

@@ -29,6 +29,7 @@ import kagor.SimulationPane.AddListener;
 import kagor.SimulationPane.RemoveListener;
 
 public class SearchPane extends BasicPane {
+	
 	private JTextField idField;
 	private JTextField productField;
 	private JTextField startTimeField;
@@ -86,12 +87,6 @@ public class SearchPane extends BasicPane {
 	public JComponent createMiddlePanel() {
 		searchListModel = new DefaultListModel<String>();
         searchList = new JList<String>(searchListModel);
-        for(int i = 0; i < 20; i++){
-        	searchListModel.addElement("element " + (i+1));
-        }
-        //searchList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        //nameList.setPrototypeCellValue("123456789012");
-        //nameList.addListSelectionListener(new NameSelectionListener());
         JScrollPane p1 = new JScrollPane(searchList);
         return p1;
 	}
@@ -99,33 +94,25 @@ public class SearchPane extends BasicPane {
 	class SearchListener implements ActionListener {
 		
         public void actionPerformed(ActionEvent e) {
-        	String id = idField.getText();
+        	int id = -1;
+        	try {
+        		id = Integer.valueOf(idField.getText());
+        	} catch (NumberFormatException ex) {
+        		//ex.printStackTrace();
+        	}
+        	
         	Timestamp startTime = stringToTimestamp(startTimeField.getText());
         	Timestamp endTime = stringToTimestamp(endTimeField.getText());
         	String product = productField.getText();
-        	String blocked = (blockedCheckBox.isSelected() ? "Blocked!" : "Unblocked");
+        	//String blocked = (blockedCheckBox.isSelected() ? "Blocked!" : "Unblocked");
         	
         	searchListModel.clear();
-        	for (String p : db.searchPallet(id,startTime,endTime,product,blocked)) 
+        	//searchListModel.addElement(HEADER);
+        	for (String p : db.searchPallet(id,startTime,endTime,product,blockedCheckBox.isSelected())) 
         		searchListModel.addElement(p);
-        	/*SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd hh:mm");
         	
-        	Date startDate, endDate;
-        	try {
-				startDate = parser.parse(startTime);
-				endDate = parser.parse(endTime);
-			} catch (ParseException e1) {
-				errorMsg("Bad format for time. Please input yyyy-mm-dd hh:mm");
-				return;
-			}*/
-        	
-        	System.out.println("Searching for: id="+id+", startTime="+startTime+", endTime="+endTime+", product="+product+", blocked="+blocked);
+        	//System.out.println("Searching for: id="+id+", startTime="+startTime+", endTime="+endTime+", product="+product+", blocked="+blocked);
         }
-    }
-	
-	private void errorMsg(String msg) {
-    	JOptionPane.showMessageDialog((JFrame) SwingUtilities.getRoot(this),
-    		    msg, "You Done Fucked up:" , JOptionPane.ERROR_MESSAGE);
     }
 	
 }

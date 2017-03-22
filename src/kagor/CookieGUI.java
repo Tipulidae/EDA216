@@ -31,7 +31,7 @@ public class CookieGUI {
         tabbedPane.addChangeListener(new ChangeHandler());
         frame.addWindowListener(new WindowHandler());
 
-        frame.setSize(500, 400);
+        frame.setSize(800, 400);
         frame.setVisible(true);
 
         sp.displayMessage("Connecting to database ...");

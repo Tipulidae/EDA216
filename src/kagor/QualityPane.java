@@ -61,37 +61,11 @@ public class QualityPane extends BasicPane {
 		
         public void actionPerformed(ActionEvent e) {
         	String product = productField.getText();
-        	Timestamp startTime = stringToTimestamp(startTimeField.getText());
-        	Timestamp endTime = stringToTimestamp(endTimeField.getText());
+        	Timestamp startTime = stringToTimestampDefaultNow(startTimeField.getText());
+        	Timestamp endTime = stringToTimestampDefaultNow(endTimeField.getText());
         	
         	db.blockPallet(product, startTime, endTime);
         	
-        	/*
-        	String[] ts = startTime.split(" ");
-        	
-        	try {
-            	Date startDate = Date.valueOf(ts[0]);
-            	int blocked = db.blockPallet(product, startDate, new Date(System.currentTimeMillis()));
-
-            	System.out.println(String.format("blocked: n=%d", blocked));
-            	//Date endDate = Date.valueOf(ts[]);
-        	} catch (IllegalArgumentException e2) {
-        		errorMsg("Bad format for time. Please input yyyy-mm-dd hh:mm");
-        	}*/
-        		
-        	
-        	//int blocked = db.blockPallet(product, startDate, endDate);
-        	//System.out.println(String.format("blocked: n=%d", blocked));
-        	/*SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd hh:mm");
-        	
-        	Date startDate, endDate;
-        	try {
-				startDate = parser.parse(startTime);
-				endDate = parser.parse(endTime);
-			} catch (ParseException e1) {
-				errorMsg("Bad format for time. Please input yyyy-mm-dd hh:mm");
-				return;
-			}*/
         	
         	System.out.println("Searching for: startTime="+startTime+", endTime="+endTime+", product="+product);
         }

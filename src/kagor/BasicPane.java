@@ -121,6 +121,19 @@ public class BasicPane extends JPanel {
     }
     
     protected Timestamp stringToTimestamp(String time) {
+    	//Timestamp now = new Timestamp(System.currentTimeMillis());
+    	if (time == null || time.isEmpty()) {
+    		return null;
+    	}
+    	try {
+    		return Timestamp.valueOf(time);
+    	} catch (IllegalArgumentException e) {
+    		errorMessage("Illegal Time Format for: " + time,"You Done Fucked up:");
+    	}
+    	return null;
+    }
+    
+    protected Timestamp stringToTimestampDefaultNow(String time) {
     	Timestamp now = new Timestamp(System.currentTimeMillis());
     	if (time == null || time.isEmpty()) {
     		return now;
@@ -128,9 +141,13 @@ public class BasicPane extends JPanel {
     	try {
     		return Timestamp.valueOf(time);
     	} catch (IllegalArgumentException e) {
-    		JOptionPane.showMessageDialog((JFrame) SwingUtilities.getRoot(this),
-    		    "Illegal Time Format for: " + time, "You Done Fucked up:" , JOptionPane.ERROR_MESSAGE);
+    		errorMessage("Illegal Time Format for: " + time,"You Done Fucked up:");
     	}
     	return now;
+    }
+    
+    protected void errorMessage(String msg, String title) {
+    	JOptionPane.showMessageDialog((JFrame) SwingUtilities.getRoot(this),
+    		    msg, title , JOptionPane.ERROR_MESSAGE);
     }
 }
