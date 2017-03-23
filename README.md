@@ -7,7 +7,7 @@ Viktor Stagge, d14, ine12vst@student.lu.se
 This project aims to create a planning system for the cookie production in Krusty Kookies Sweden AB. All relevant information regarding the production, orders, and deliveries is maintained in a local database. The software system is intended to be split into three parts, and only the one handling production is implemented here.
 
 ## Requirements
-# Implemented
+### Implemented
 * Complete database
 * Can add a pallet to database, of specified type and time of production.
 * Can block all pallets containing a certain product, within specified time interval.
@@ -18,7 +18,7 @@ This project aims to create a planning system for the cookie production in Krust
 * Can remove a pallet from the freezer, if there is a valid order for it.
 * Deducts material from storage when a pallet of cookies is produced.
 
-# Unimplemented
+### Unimplemented
 * Can read/add/update/remove recipes.
 * Can add/read/remove orders.
 * Can add/read/remove material to storage.
@@ -32,15 +32,33 @@ sqlite3 is used to create the initial database, which is then manipulated throug
 A custom database class implements a set amount of methods. The method arguments are used to query the database through prepared statements, which sanitizes the input and guarantees prevention of SQL-injections. 
 
 ## E/R diagram
-
+![UML](UML.png)
 
 ## Relations
+Pallets(**palletId**, *orderId*, *cookieName*, location, timestamp, blocked)
+
+Orders(**orderId**, *customerName*, deliveryTime)
+
+OrderItems(**_orderId, cookieName_**, quantity)
+
+Recipes(**_cookieName_, ingredient**, quantity)
+
+Cookies(**cookieName**)
+
+Ingredients(**ingredient**, amount, lastDelivery, deliveredAmount)
+
+Customers(**customerName**, address)
+
+**primary key**, *foreign key*.
+
+
+All relations are in BCNF format.
 
 ## SQL Statements
+```
 PRAGMA foreign_keys=ON;
 
--- Create the tables.
-CREATE TABLE Ingredients (
+CREATE TABLE Ingredients ( 
 	ingredient			varchar(32) not null,
 	amount				numeric not null,
 	lastDelivery		datetime,
@@ -97,6 +115,4 @@ CREATE TABLE OrderItems (
 	foreign key (orderId) references Orders(orderId),
 	foreign key (cookieName) references Cookies(cookieName)
 );
-
-## User Manual
-Superfluous.
+```
