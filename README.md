@@ -1,18 +1,38 @@
-Axel Nyström
-d14
-mat04any@student.lu.se
+## Authors
+Axel Nyström, d14, mat04any@student.lu.se
 
-Viktor Stagge
-d14
-ine12vst@student.lu.se
+Viktor Stagge, d14, ine12vst@student.lu.se
 
 ## Introduction
+This project aims to create a planning system for the cookie production in Krusty Kookies Sweden AB. All relevant information regarding the production, orders, and deliveries is maintained in a local database. The software system is intended to be split into three parts, and only the one handling production is implemented here.
 
 ## Requirements
+# Implemented
+* Complete database
+* Can add a pallet to database, of specified type and time of production.
+* Can block all pallets containing a certain product, within specified time interval.
+* Can check how many pallets that have been produced within a specified time interval.
+* Can check how many pallets that have been produced of a specific type.
+* Can check how many pallets that have been blocked.
+* Can monitor the correct location of a pallet.
+* Can remove a pallet from the freezer, if there is a valid order for it.
+* Deducts material from storage when a pallet of cookies is produced.
+
+# Unimplemented
+* Can read/add/update/remove recipes.
+* Can add/read/remove orders.
+* Can add/read/remove material to storage.
+* Can list all pallets that have been delivered to a specific customer, including time of delivery.
+* Can create a loading order.
+* Can create a loading bill.
 
 ## System Outline
+sqlite3 is used to create the initial database, which is then manipulated through Java and JDBC. 
+
+A custom database class implements a set amount of methods. The method arguments are used to query the database through prepared statements, which sanitizes the input and guarantees prevention of SQL-injections. 
 
 ## E/R diagram
+
 
 ## Relations
 
