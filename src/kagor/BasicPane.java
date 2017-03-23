@@ -1,44 +1,22 @@
 package kagor;
 
 import javax.swing.*;
-import javax.swing.border.*;
 
+import database.Database;
+import exceptions.CookieEmptyTimeFieldException;
+import exceptions.CookieException;
 
 import java.awt.*;
 import java.sql.Timestamp;
 
-/**
- * BasicPane is a pane in the user interface. It consists of two subpanels:
- * the left panel and the right panel. The right panel in turn consist
- * of three panels on top of each other: bottom, middle and top. Subclasses
- * can choose to configure these panels as they wish.
- * <p>
- * The class contains a reference to the database object, so subclasses
- * can communicate with the database.
- */
+@SuppressWarnings("serial")
 public class BasicPane extends JPanel {
-
-    private static final long serialVersionUID = 1;
-
-    /**
-     * The database object.
-     */
     protected Database db;
-        
-    /**
-     * A label which is intended to contain a message text.
-     */
-    protected JLabel messageLabel;
-        
-    /** 
-     * Create a BasicPane object.
-     *
-     * @param db The database object.
-     */
+    private static final Color DEFAULT_MSG_COLOR = Color.BLACK;
+    
     public BasicPane(Database db) {
         this.db = db;
-        messageLabel = new JLabel("      ");
-                
+        
         setLayout(new BorderLayout());
                 
         JComponent leftPanel = createLeftPanel();
@@ -49,101 +27,52 @@ public class BasicPane extends JPanel {
                 
         JComponent topPanel = createTopPanel();
         JComponent middlePanel = createMiddlePanel();
-        JComponent bottomPanel = createBottomPanel();
-        bottomPanel.setBorder
-            (new CompoundBorder(new SoftBevelBorder(BevelBorder.RAISED),
-                                bottomPanel.getBorder()));
+        
         rightPanel.add(topPanel, BorderLayout.NORTH);
         rightPanel.add(middlePanel, BorderLayout.CENTER);
-        rightPanel.add(bottomPanel, BorderLayout.SOUTH);
         add(rightPanel, BorderLayout.CENTER);
     }
         
-    /** 
-     * Create the left panel. Should be overridden by subclasses. 
-     *
-     * @return An empty panel.
-     */
-    public JComponent createLeftPanel() { 
+    
+    protected JComponent createLeftPanel() { 
         return new JPanel();
-    }
-        
-    /** 
-     * Create the top panel. Should be overridden by subclasses. 
-     *
-     * @return An empty panel.
-     */
-    public JComponent createTopPanel() { 
-        return new JPanel();
-    }
-        
-    /** 
-     * Create the middle panel. Should be overridden by subclasses. 
-     *
-     * @return An empty panel.
-     */
-    public JComponent createMiddlePanel() { 
-        return new JPanel();
-    }
-        
-    /** 
-     * Create the bottom panel. Should be overridden by subclasses. 
-     *
-     * @return An empty panel.
-     */
-    public JComponent createBottomPanel() {
-    	JPanel panel = new JPanel();
-    	panel.add(messageLabel);
-    	return panel;
-        //return new JPanel();
-    }
-        
-    /**
-     * Perform the entry actions of the pane. Empty here, should be
-     * overridden by subclasses.
-     */
-    public void entryActions() {}
-        
-    /**
-     * Display a message.
-     *
-     * @param msg The message to display.
-     */
-    public void displayMessage(String msg) {
-        messageLabel.setText(msg);
-    }
-        
-    /**
-     * Clear the message line.
-     */
-    public void clearMessage() {
-        messageLabel.setText(" ");
     }
     
-    protected Timestamp stringToTimestamp(String time) {
-    	//Timestamp now = new Timestamp(System.currentTimeMillis());
+    protected JComponent createTopPanel() { 
+        return new JPanel();
+    }
+    
+    protected JComponent createMiddlePanel() { 
+        return new JPanel();
+    }
+    
+    
+    public void entryActions() {
+    	
+    }
+    
+    protected void displayMessage(CookieException e) {
+    	e.printStackTrace();
+    	displayMessage(e.getMessage(), Color.RED);
+    }
+    
+    protected void displayMessage(String msg) {
+    	displayMessage(msg, DEFAULT_MSG_COLOR);
+    }
+    
+    protected void displayMessage(String msg, Color color) {
+    	((CookieFrame)getTopLevelAncestor()).displayMessage(msg, color);
+    }
+    
+    protected Timestamp stringToTimestamp(String time) throws CookieException {
     	if (time == null || time.isEmpty()) {
-    		return null;
+    		throw new CookieEmptyTimeFieldException();
     	}
     	try {
     		return Timestamp.valueOf(time);
     	} catch (IllegalArgumentException e) {
-    		errorMessage("Illegal Time Format for: " + time,"You Done Fucked up:");
+    		throw new CookieException(e,"Invalid format in time field. Use yyyy-mm-dd hh:mm:ss.");
     	}
-    	return null;
-    }
-    
-    protected Timestamp stringToTimestampDefaultNow(String time) {
-    	Timestamp now = new Timestamp(System.currentTimeMillis());
-    	if (time == null || time.isEmpty()) {
-    		return now;
-    	}
-    	try {
-    		return Timestamp.valueOf(time);
-    	} catch (IllegalArgumentException e) {
-    		errorMessage("Illegal Time Format for: " + time,"You Done Fucked up:");
-    	}
-    	return now;
     }
     
     protected void errorMessage(String msg, String title) {

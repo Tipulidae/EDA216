@@ -11,6 +11,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import database.Database;
+import exceptions.CookieEmptyTimeFieldException;
+import exceptions.CookieException;
+
+@SuppressWarnings("serial")
 public class SimulationPane extends BasicPane {
 	public SimulationPane(Database db) {
 		super(db);
@@ -20,8 +25,6 @@ public class SimulationPane extends BasicPane {
 	public JComponent createTopPanel() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridLayout(5, 3));
-		
-		//panel.add(new JButton);
 		
 		JButton addButton = new JButton("Add Pallet");
 		JTextField addTypeField = new JTextField();
@@ -68,19 +71,33 @@ public class SimulationPane extends BasicPane {
 			this.timeField = time;
 		}
 		
-        public void actionPerformed(ActionEvent e) {
+        public void actionPerformed(ActionEvent ae) {
         	String type = typeField.getText();
-        	Timestamp time = stringToTimestampDefaultNow(timeField.getText());
-        	System.out.println("Adding "+type+", "+time);
+        	Timestamp time = new Timestamp(System.currentTimeMillis()); 
+        			
+        			
+        	try {
+        		time = stringToTimestamp(timeField.getText());
+        	} catch (CookieEmptyTimeFieldException e) {
+        		
+        	} catch (CookieException e) {
+        		displayMessage(e);
+        		return;
+        	}
         	
-        	// Updates ingredients
-        	db.makeOnePalletOf(type);
-        	
-        	// Adds pallet to db (this creates a palletId (barcode) and puts it in the freezer)
-        	int barcode = db.addPallet(type,time);
-        	
-        	// Print informative message to message bar!
-        	displayMessage("One pallet of "+type+" baked, packaged and placed in freezer! Barcode: "+barcode);
+        	try {
+        		// Updates ingredients
+        		db.deductIngredientsFor(type);
+        		
+        		// Adds the pallet to db
+        		int barcode = db.addPallet(type,time);
+            	
+            	// Print informative message to message bar!
+            	displayMessage("One pallet of "+type+" baked, packaged and placed in freezer! Barcode: "+barcode);
+            	
+        	} catch (CookieException e) {
+        		displayMessage(e);
+        	}
         }
     }
 	
@@ -94,7 +111,7 @@ public class SimulationPane extends BasicPane {
 			this.orderIdField = orderId;
 		}
 		
-        public void actionPerformed(ActionEvent e) {
+        public void actionPerformed(ActionEvent ae) {
         	int palletId = -1;
         	int orderId = -1;
         	
@@ -102,20 +119,17 @@ public class SimulationPane extends BasicPane {
         		palletId = Integer.parseInt(palletIdField.getText());
         		orderId = Integer.parseInt(orderIdField.getText());
         	} catch (NumberFormatException ex) {
-        		errorMessage("Pallet Id and order Id must be integers!", "Fuck you!");
+        		displayMessage(new CookieException(ex, "Pallet Id and order Id must be integers!"));
         		return;
         	}
         	
-        	System.out.println("Removing "+palletId+", "+orderId);
         	
-        	
-        	
-        	if (db.deliverPallet(palletId,orderId)) {
-        		displayMessage("Took pallet "+palletId+" from Freezer and delivered to order "+orderId);
-        	} else {
-        		displayMessage("Det gick ente!");
+        	try {
+        		db.deliverPallet(palletId,orderId);
+        		displayMessage("Took pallet "+palletId+" from Freezer and delivered to order "+orderId+".");
+        	} catch (CookieException e) {
+        		displayMessage(e);
         	}
-        	
         }
     }
 }

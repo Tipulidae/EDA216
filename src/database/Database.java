@@ -1,46 +1,28 @@
-package kagor;
+package database;
 
 import java.sql.*;
-import java.sql.Date;
 import java.util.*;
 
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
+import exceptions.CookieException;
+import exceptions.CookieRollbackException;
 
-/**
- * Database is a class that specifies the interface to the movie
- * database. Uses JDBC.
- */
 public class Database {
+	private static final boolean DEBUG_MODE = true;
 	private static final double COOKIES_PER_PALLET = 5400;
 	private static final double COOKIES_PER_RECIPE = 100;
-	
 	private static final double INGREDIENT_MULTIPLIER = COOKIES_PER_PALLET / COOKIES_PER_RECIPE;
 	
-	private int id;
-    /**
-     * The database connection.
-     */
     private Connection conn;
 
-    /**
-     * Create the database interface object. Connection to the
-     * database is performed later.
-     */
+    
     public Database() {
         conn = null;
     }
 
-    /**
-     * Open a connection to the database, using the specified user
-     * name and password.
-     */
     public boolean openConnection(String filename) {
         try {
             Class.forName("org.sqlite.JDBC");
             conn = DriverManager.getConnection("jdbc:sqlite:" + filename);
-            initId();
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -50,27 +32,7 @@ public class Database {
         }
         return true;
     }
-    
-    private void initId() {
-    	try {
-    		String sql = 
-    				"SELECT MAX(id) FROM Ticket;";
-    		Statement s = conn.createStatement();
-    		ResultSet rs = s.executeQuery(sql);
-    		while (rs.next()) {
-    			id = rs.getInt(1);
-    		}
-    	} catch (SQLException e) {
-    		
-    	} finally {
-    		
-    	}
-    	System.out.println("ID: " + id);
-    }
 
-    /**
-     * Close the connection to the database.
-     */
     public void closeConnection() {
         try {
             if (conn != null) {
@@ -81,16 +43,11 @@ public class Database {
         }
     }
 
-    /**
-     * Check if the connection to the database has been established
-     * 
-     * @return true if the connection has been established
-     */
     public boolean isConnected() {
         return conn != null;
     }
 
-    public int addPallet(String product, Timestamp time){
+    public int addPallet(String product, Timestamp time) throws CookieException {
     	int barcode = -1;
     	try{
     		String insertString = "INSERT INTO Pallets (cookieName, location, timestamp) VALUES (?,?,?)";
@@ -105,7 +62,7 @@ public class Database {
     		barcode = rs.getInt(1);
     		
     	} catch (SQLException e) {
-    		System.err.println(e);
+    		throw new CookieException(e, "Database error when trying to add pallet.");
     	}
     	
     	
@@ -113,9 +70,9 @@ public class Database {
     }
 
 
-	public List<String> searchPallet(int id, Timestamp startTime, Timestamp endTime, String product, boolean blocked) {
-		List<String> pallets = new LinkedList<String>();
-		
+	public List<Object[]> searchPallet(int id, Timestamp startTime, Timestamp endTime, String product, boolean blocked) 
+			throws CookieException {
+		List<Object[]> pallets = new LinkedList<Object[]>();
 		try {
 			boolean[] params = new boolean[4];
 			
@@ -144,23 +101,38 @@ public class Database {
 			ps.setBoolean(i, blocked);
 			
 			ResultSet rs = ps.executeQuery();
-			
+			int n= rs.getMetaData().getColumnCount();
 			while (rs.next()) {
-				String str = "%16s %16s %32s %16s %32s %16s";
-				pallets.add(String.format(str, rs.getString(1), rs.getString(2),
-						rs.getString(3), rs.getString(4), rs.getTimestamp(5), rs.getBoolean(6)));
+				Object[] objs = new String[n];
+				
+				for (int j=0; j<n; j++) {
+					objs[j] = rs.getString(j+1);
+				}
+				objs[0] = Integer.toString(rs.getInt(1));
+				objs[1] = Integer.toString(rs.getInt(2));
+				objs[2] = rs.getString(3);
+				objs[3] = rs.getString(4);
+				objs[4] = rs.getTimestamp(5).toString();
+				objs[5] = Boolean.toString(rs.getBoolean(6));
+				
+				pallets.add(objs);
+				
+								
+				//String str = "%16s %16s %32s %16s %32s %16s";
+				//pallets.add(String.format(str, rs.getInt(1), rs.getString(2),
+				//		rs.getString(3), rs.getString(4), rs.getTimestamp(5), rs.getBoolean(6)));
 			}
 				
 		} catch (SQLException e) {
 			e.printStackTrace();
+			throw new CookieException(e, "There was an unexpected problem with the database. Please try again later.");
 		}
 		return pallets;
 	}
 
-	public boolean deliverPallet(int palletId, int orderId) {
+	public void deliverPallet(int palletId, int orderId) throws CookieException {
 		
 		
-		boolean success = false;
 		try {
 			conn.setAutoCommit(false);
 			
@@ -168,26 +140,26 @@ public class Database {
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setInt(1, palletId);
 			ResultSet rs = ps.executeQuery();
-			if (!rs.next())	return false;
+			if (!rs.next())	throw new CookieException("No such pallet Id.");
 			
 			String product = rs.getString(1);
-			System.out.println("Found product = " + product);
 			
 			String sql2 = "SELECT quantity FROM OrderItems WHERE orderId = ? AND cookieName = ?";
 			PreparedStatement ps2 = conn.prepareStatement(sql2);
 			ps2.setInt(1, orderId);
 			ps2.setString(2,product);
 			ResultSet rs2 = ps2.executeQuery();
-			if (!rs2.next()) return false;
+			if (!rs2.next()) throw new CookieException("Order doesn't exist, or doesn't need this type of cookie.");
 			
 			int remaining = rs2.getInt(1);
 			System.out.println("There are "+remaining +" of " + product);
 			
-			String sql3 = "SELECT count(*) FROM Pallets WHERE orderId = ?";
+			String sql3 = "SELECT count(*) FROM Pallets WHERE orderId = ? AND cookieName = ?";
 			PreparedStatement ps3 = conn.prepareStatement(sql3);
 			ps3.setInt(1, orderId);
+			ps3.setString(2, product);
 			ResultSet rs3 = ps3.executeQuery();
-			if(!rs3.next()) return false;
+			if(!rs3.next()) throw new CookieException();
 			
 			remaining -= rs3.getInt(1);
 			System.out.println("Found "+ rs3.getInt(1) + " orders already linked.");
@@ -199,22 +171,24 @@ public class Database {
 	    		updateStatement.setString(1, "DELIVERED");
 	    		updateStatement.setInt(2, orderId);
 	    		updateStatement.setInt(3, palletId);
-	    		success = updateStatement.executeUpdate() > 0;
+	    		if (updateStatement.executeUpdate() <= 0)
+	    			throw new CookieException();
+			} else {
+				throw new CookieException("The specified order already has enough cookies of type "+product);
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			throw new CookieException(e);
 		} finally {
 			try {
 				conn.setAutoCommit(true);
 			} catch (SQLException e) {
-				System.err.println("Vem vare som fucking kasta=!=!=!");
-				e.printStackTrace();
+				throw new CookieRollbackException(e);
 			}
 		}
-		return success;
+		
 	}
 	
-	public int blockPallet(String product, Timestamp startTime, Timestamp endTime){
+	public int blockPallet(String product, Timestamp startTime, Timestamp endTime) throws CookieException {
 		int blocked = 0;
 		try{
 			String blockString = "UPDATE Pallets SET blocked = ? WHERE cookieName = ? AND"
@@ -226,17 +200,17 @@ public class Database {
 			blockStatement.setTimestamp(4, endTime);
 			blocked = blockStatement.executeUpdate();
 		} catch (SQLException e){
-			e.printStackTrace();
+			throw new CookieException(e);
 		}
 		return blocked;
 	}
 
-	public void makeOnePalletOf(String type) {
+	public void deductIngredientsFor(String cookie) throws CookieException {
 		try{
 			conn.setAutoCommit(false);
 			String recipeString = "SELECT ingredient, quantity FROM Recipes WHERE cookieName = ?";
 			PreparedStatement ps = conn.prepareStatement(recipeString);
-			ps.setString(1, type);
+			ps.setString(1, cookie);
 			ResultSet rs = ps.executeQuery();
 			
 			String ingredientString = "UPDATE Ingredients SET amount = amount - ? WHERE ingredient = ?";
@@ -248,32 +222,26 @@ public class Database {
 				ps2.setDouble(1, consumed);
 				ps2.setString(2, ingredient);
 				
-				int updated = ps2.executeUpdate();
-				System.out.println("Updated=" + updated + ", Removed "+ consumed + " from " + ingredient);
-			}
+				ps2.executeUpdate();			}
 		} catch (SQLException e) {
 			try{
 				conn.rollback();
 			} catch (SQLException exc) {
-				exc.printStackTrace();
+				throw new CookieRollbackException(exc);
 			}
+			throw new CookieException(e);
 		} finally {
 			try {
 				conn.setAutoCommit(true);
 			} catch (SQLException e) {
-				System.out.println("Vem var det som kasta!??");
-				e.printStackTrace();
+				throw new CookieRollbackException(e);
 			}
 		}
-		printIngredients();
-		
-		// Calculate how many of each ingredient is needed to make one pallet of cookie type
-		// Then remove these ingredients from the database.
-		// TODO Auto-generated method stub
-		
+		debugPrintIngredients();
 	}
     
-	private void printIngredients(){
+	private void debugPrintIngredients(){
+		if (!DEBUG_MODE) return;
 		String sql = "SELECT ingredient, amount FROM Ingredients";
 		try{
 			Statement s = conn.createStatement();
@@ -287,56 +255,4 @@ public class Database {
 			
 		}
 	}
-	
-	
-    /*
-    public List<String> getDates(String movie) {
-    	List<String> dates = new LinkedList<String>();
-    	try {
-    		String sql = 
-    				"SELECT DISTINCT pdate FROM Performance WHERE movie = '"+movie+"'";
-    		Statement s = conn.createStatement();
-    		ResultSet rs = s.executeQuery(sql);
-    		while (rs.next()) {
-    			dates.add(rs.getString(1));
-    		}
-    	} catch (SQLException e) {
-    		
-    	} finally {
-    		
-    	}
-    	return dates;
-    }
-    
-    public Performance getPerformance(String movie, String date) {
-    	Performance p = new Performance();
-    	try {
-    		String sql = 
-    				"SELECT DISTINCT theater,seats "
-    				+ "FROM Performance,Theater "
-    				+ "WHERE movie = '"+movie+"' AND "
-    				+ "pdate = '"+date+"' AND Theater.name = Performance.theater";
-    		Statement s = conn.createStatement();
-    		ResultSet rs = s.executeQuery(sql);
-    		while (rs.next()) {
-    			p.movie = movie;
-    			p.date = date;
-    			p.theater = rs.getString(1);
-    			p.freeSeats = getFreeSeats(movie,date);
-    		}
-    	} catch (SQLException e) {
-    		
-    	} finally {
-    		
-    	}
-    	return p;
-    } */
- 
-	/*
-	Date strToDate(String dateStr) {
-		String[] ts = dateStr.split(" ");
-		
-	}*/
-	
-	
 }

@@ -3,24 +3,19 @@ package kagor;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Date;
 import java.sql.Timestamp;
 
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 
-import kagor.SearchPane.SearchListener;
+import database.Database;
+import exceptions.CookieEmptyTimeFieldException;
+import exceptions.CookieException;
 
+@SuppressWarnings("serial")
 public class QualityPane extends BasicPane {
 	private JTextField productField;
 	private JTextField startTimeField;
@@ -59,17 +54,26 @@ public class QualityPane extends BasicPane {
 	
 	class BlockListener implements ActionListener {
 		
-        public void actionPerformed(ActionEvent e) {
+        public void actionPerformed(ActionEvent ae) {
         	String product = productField.getText();
-        	Timestamp startTime = stringToTimestampDefaultNow(startTimeField.getText());
-        	Timestamp endTime = stringToTimestampDefaultNow(endTimeField.getText());
+        	Timestamp startTime = new Timestamp(System.currentTimeMillis());
+        	Timestamp endTime = startTime;
         	
-        	db.blockPallet(product, startTime, endTime);
-        	
-        	
-        	System.out.println("Searching for: startTime="+startTime+", endTime="+endTime+", product="+product);
+        	try {
+	        	startTime = stringToTimestamp(startTimeField.getText());
+	        	endTime = stringToTimestamp(endTimeField.getText());
+        	} catch (CookieEmptyTimeFieldException e) {
+        		
+        	} catch (CookieException e) {
+        		displayMessage(e);
+        		return;
+        	}
+        	try {
+        		int blocked = db.blockPallet(product, startTime, endTime);
+        		displayMessage("Blocked "+blocked+" pallets.");
+         	} catch (CookieException e) {
+        		displayMessage(e);
+        	}
         }
     }
-	
-	
 }

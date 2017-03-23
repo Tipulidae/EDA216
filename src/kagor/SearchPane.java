@@ -4,30 +4,22 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Timestamp;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.List;
 
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
 
-import kagor.SimulationPane.AddListener;
-import kagor.SimulationPane.RemoveListener;
+import database.Database;
+import exceptions.CookieEmptyTimeFieldException;
+import exceptions.CookieException;
 
+@SuppressWarnings("serial")
 public class SearchPane extends BasicPane {
 	
 	private JTextField idField;
@@ -36,8 +28,7 @@ public class SearchPane extends BasicPane {
 	private JTextField endTimeField;
 	private JCheckBox blockedCheckBox;
 	
-	private JList<String> searchList;
-	private DefaultListModel<String> searchListModel;
+	private PalletTableModel ptm;
 	
 	
 	public SearchPane(Database db) {
@@ -85,33 +76,52 @@ public class SearchPane extends BasicPane {
 	
 	@Override
 	public JComponent createMiddlePanel() {
-		searchListModel = new DefaultListModel<String>();
-        searchList = new JList<String>(searchListModel);
-        JScrollPane p1 = new JScrollPane(searchList);
-        return p1;
+		ptm = new PalletTableModel();
+		JTable table = new JTable(ptm);
+		JScrollPane sp = new JScrollPane(table);
+		table.setEnabled(false);
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+		
+		return sp;
 	}
 	
 	class SearchListener implements ActionListener {
 		
-        public void actionPerformed(ActionEvent e) {
+        public void actionPerformed(ActionEvent ae) {
+        	
+        	 
+        	
         	int id = -1;
-        	try {
-        		id = Integer.valueOf(idField.getText());
-        	} catch (NumberFormatException ex) {
-        		//ex.printStackTrace();
+        	if (!idField.getText().isEmpty()) {
+	        	try {
+	        		id = Integer.valueOf(idField.getText());
+	        	} catch (NumberFormatException ex) {
+	        		displayMessage(new CookieException(ex, "Pallet id must be an integer or empty."));
+	        		return;
+	        	}
         	}
         	
-        	Timestamp startTime = stringToTimestamp(startTimeField.getText());
-        	Timestamp endTime = stringToTimestamp(endTimeField.getText());
+        	Timestamp startTime=null,endTime=null;
+        	try {
+	        	startTime = stringToTimestamp(startTimeField.getText());
+	        	endTime = stringToTimestamp(endTimeField.getText());
+        	} catch (CookieEmptyTimeFieldException e) {
+        		
+        	} catch (CookieException e) {
+        		displayMessage(e);
+        		return;
+        	}
         	String product = productField.getText();
-        	//String blocked = (blockedCheckBox.isSelected() ? "Blocked!" : "Unblocked");
         	
-        	searchListModel.clear();
-        	//searchListModel.addElement(HEADER);
-        	for (String p : db.searchPallet(id,startTime,endTime,product,blockedCheckBox.isSelected())) 
-        		searchListModel.addElement(p);
-        	
-        	//System.out.println("Searching for: id="+id+", startTime="+startTime+", endTime="+endTime+", product="+product+", blocked="+blocked);
+        	try {
+        	   	List<Object[]> pallets = db.searchPallet(id,startTime,endTime,product,blockedCheckBox.isSelected());
+        	   	ptm.setData(pallets);
+        	   	displayMessage("Found "+pallets.size()+" pallets.");
+        	} catch (CookieException e) {
+        		displayMessage(e);
+        	}
+        	   	
+        	   	
         }
     }
 	
